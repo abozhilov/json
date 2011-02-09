@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.1.3
+ * @version 0.1.4
  * @author Asen Bozhilov
  * @date 2011-02-09
  * 
@@ -26,7 +26,7 @@ var evalJSON = (function () {
         COMMA       = ',';       
 
     var punctuator = /^[{}:,\[\]]/,
-        string = /^"(?:[^"\\\u0000-\u001F\u0080-\u009F\u007F]|\\["\\\/bfnrt]|\\u[0-9A-F]{4})*"/,
+        string = /^"(?:[^"\\\u0000-\u001F]|\\["\\\/bfnrt]|\\u[0-9A-F]{4})*"/,
         number = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/,
         bool = /^(?:true|false)/,
         nullLiteral = /^null/,
