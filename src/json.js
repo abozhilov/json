@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.1.2
+ * @version 0.1.3
  * @author Asen Bozhilov
  * @date 2011-02-09
  * 
@@ -107,13 +107,13 @@ var evalJSON = (function () {
     JSONParser.prototype = {
         parse : function () {
             var lex = this.lex,
-                value = this.getValue();
+                jsValue = this.getValue();
                 
             if (lex.getNextToken() !== 'END') {
                 lex.error('Illegal token');
             }
             
-            return value;       
+            return jsValue;       
         },
         
         getObject : function () {
