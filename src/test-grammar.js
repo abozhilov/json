@@ -138,7 +138,7 @@ var JSONTest = (function () {
 
     for (var i = 0, len = ASSERT_ERROR.length; i < len; i++) {
         try {
-            new JSONParser(ASSERT_ERROR[i]).parse();
+            evalJSON(ASSERT_ERROR[i]);
             print("Allowed syntax");
         }catch (e) {
             if (e instanceof SyntaxError) {

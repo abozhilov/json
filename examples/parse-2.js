@@ -3,7 +3,7 @@
 load('../src/json.js');
 
 print(
-   new JSONParser(
+   evalJSON(
       readFile('json-2')
-   ).parse()
+   )
 );

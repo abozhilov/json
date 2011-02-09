@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.0.3
+ * @version 0.1.2
  * @author Asen Bozhilov
  * @date 2011-02-09
  * 
@@ -12,11 +12,11 @@
  * @contributors
  *
  * @usage
- * var jsValue = new JSONParser(JSONStr).parse();
+ * var jsValue = evalJSON(JSONStr);
  */
 
 
-var JSONParser = (function () {
+var evalJSON = (function () {
 
     var LEFT_CURLY  = '{',
         RIGHT_CURLY = '}',
@@ -100,8 +100,8 @@ var JSONParser = (function () {
         }   
     }
 
-    function JSONParser(JSONStr) {
-        this.lex = new JSONLexer(JSONStr);
+    function JSONParser(lexer) {
+        this.lex = lexer;
     }
 
     JSONParser.prototype = {
@@ -180,8 +180,7 @@ var JSONParser = (function () {
                 if (values) {
                     if (tval == COMMA) {
                         token = lex.getNextToken();
-                        tval = token.value;
-                        type = token.type;  
+                        tval = token.value;  
                         if (tval == RIGHT_BRACE) {
                             lex.error('Invalid trailing comma');
                         }           
@@ -196,9 +195,9 @@ var JSONParser = (function () {
             }        
         },
         
-        getValue : function(tokenValue) {
+        getValue : function(fromToken) {
             var lex = this.lex,
-                token = tokenValue || lex.getNextToken(),
+                token = fromToken || lex.getNextToken(),
                 tval = token.value;
             switch (token.type) {
                 case 'PUNCTUATOR':
@@ -225,7 +224,9 @@ var JSONParser = (function () {
         }
     };
     
-    return JSONParser;
+    return function (JSONStr) {
+        return new JSONParser(new JSONLexer(JSONStr)).parse();
+    };
 })();
 
 
