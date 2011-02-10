@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.1.4
+ * @version 0.2.1
  * @author Asen Bozhilov
  * @date 2011-02-09
  * 
@@ -10,6 +10,7 @@
  * Javascript parser of JSON (JavaScript Object Notation) according ECMAScript 5 JSON grammar
  *
  * @contributors
+ * Alexander a.k.a @bga_
  *
  * @usage
  * var jsValue = evalJSON(JSONStr);
@@ -32,6 +33,14 @@ var evalJSON = (function () {
         nullLiteral = /^null/,
         whiteSpace = /^[\t ]+/,
         lineTerminator = /^\r?\n/;
+        
+    var tokenType = {
+        PUNCTUATOR : 1,
+        STRING     : 2,
+        NUMBER     : 3,
+        BOOLEAN    : 4,
+        NULL       : 5
+    };
         
     function JSONLexer(JSONStr) {
         this.line = 1;
@@ -64,19 +73,19 @@ var evalJSON = (function () {
                 return this.getNextToken();
             }
             else if ((token = punctuator.exec(str))) {
-                type = 'PUNCTUATOR';
+                type = tokenType.PUNCTUATOR;
             }
             else if ((token = string.exec(str))) {
-                type = 'STRING';
+                type = tokenType.STRING;
             }
             else if ((token = number.exec(str))) {
-                type = 'NUMBER';
+                type = tokenType.NUMBER;
             }
             else if ((token = bool.exec(str))) {
-                type = 'BOOLEAN';
+                type = tokenType.BOOLEAN;
             }
             else if ((token = nullLiteral.exec(str))) {
-                type = 'NULL';
+                type = tokenType.NULL;
             }
             else {
                 this.error('Invalid token');
@@ -119,13 +128,12 @@ var evalJSON = (function () {
         getObject : function () {
             var jsObj = {},
                 lex = this.lex,
-                token, tval, type,
-                prop, pairs = false;
+                token, tval, prop, 
+                pairs = false;
                 
             while (true) {
                 token = lex.getNextToken();
                 tval = token.value;
-                type = token.type;
                 
                 if (tval == RIGHT_CURLY) {
                     return jsObj;
@@ -135,7 +143,6 @@ var evalJSON = (function () {
                     if (tval == COMMA) {
                         token = lex.getNextToken();
                         tval = token.value;
-                        type = token.type;  
                         if (tval == RIGHT_CURLY) {
                             lex.error('Invalid trailing comma');
                         }           
@@ -145,11 +152,11 @@ var evalJSON = (function () {
                     } 
                 }
                 
-                if (type != 'STRING') {
+                if (token.type != tokenType.STRING) {
                     lex.error('Invalid property name');
                 }
                 
-                prop = String(tval).slice(1, -1);
+                prop = this.getString(tval);
                 
                 token = lex.getNextToken();
                 tval = token.value;
@@ -166,12 +173,11 @@ var evalJSON = (function () {
         getArray : function () {
             var jsArr = [],
                 lex = this.lex,
-                token, tval, type,
-                prop, values = false;
+                token, tval, prop, 
+                values = false;
             while (true) {
                 token = lex.getNextToken();
                 tval = token.value;
-                type = token.type;
                 
                 if (tval == RIGHT_BRACE) {
                     return jsArr;
@@ -195,12 +201,18 @@ var evalJSON = (function () {
             }        
         },
         
+        getString : function (strVal) {
+            return strVal.slice(1, -1).replace(/\\u([0-9a-fA-F]{4})/g, function (match, hexVal) {
+                return String.fromCharCode(parseInt(hexVal, 16));
+            }); 
+        },
+        
         getValue : function(fromToken) {
             var lex = this.lex,
                 token = fromToken || lex.getNextToken(),
                 tval = token.value;
             switch (token.type) {
-                case 'PUNCTUATOR':
+                case tokenType.PUNCTUATOR:
                     if (tval == LEFT_CURLY) {
                         return this.getObject();
                     }
@@ -210,13 +222,13 @@ var evalJSON = (function () {
                     else {
                         lex.error('Illegal punctoator');
                     }
-                case 'STRING':
-                    return String(tval).slice(1, -1);               
-                case 'NUMBER':
+                case tokenType.STRING:
+                    return this.getString(tval);               
+                case tokenType.NUMBER:
                     return Number(tval);
-                case 'BOOLEAN':
-                    return Boolean(tval);
-                case 'NULL':
+                case tokenType.BOOLEAN:
+                    return tval === "true";
+                case tokenType.NULL:
                     return null;
                 default:
                     lex.error('Invalid value');
@@ -228,5 +240,3 @@ var evalJSON = (function () {
         return new JSONParser(new JSONLexer(JSONStr)).parse();
     };
 })();
-
-
