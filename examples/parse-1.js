@@ -2,8 +2,14 @@
 
 load('../src/json.js');
 
-print(
-   evalJSON(
-      readFile('json-1')
-   )
+function reviver(name, value) {
+    print('name: ' + name + ', value: ' + value);
+    return value;    
+}
+
+var val = evalJSON(
+  readFile('json-1'),
+  reviver
 );
+
+print('-------------------\nevalJSON: ' + val);

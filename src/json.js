@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.2.3
+ * @version 0.9.0
  * @author Asen Bozhilov
  * @date 2011-02-09
  * 
@@ -245,9 +245,47 @@ var evalJSON = (function () {
                     lex.error('Invalid value');
            }       
         }
-    };
+    };   
     
-    return function (JSONStr) {
-        return new JSONParser(new JSONLexer(JSONStr)).parse();
+    var getClass = Object.prototype.toString,
+        hasOwnProp = Object.prototype.hasOwnProperty;
+    
+    function filter(base, prop, value) {
+        if (typeof value == 'undefined') {
+            delete base[prop];
+            return;
+        }
+        base[prop] = value;
+    }
+    
+    function walk(holder, name, rev) {
+        var val = holder[name], 
+            i, len;
+        
+        if (typeof val == 'object' && val) {
+            if (getClass.call(val) == '[object Array]') {
+                for (i = 0, len = val.length; i < len; i++) {
+                    filter(val, i, walk(val, i, rev));
+                }
+            }
+            else {
+                for (i in val) {
+                    if (hasOwnProp.call(val, i)) {
+                        filter(val, i, walk(val, i, rev));
+                    }
+                }
+            }
+        }
+        
+        return rev.call(holder, name, val); 
+    }
+        
+    return function (JSONStr, reviver) {
+        var jsVal = new JSONParser(new JSONLexer(JSONStr)).parse();
+        if (typeof reviver == 'function') {
+            return walk({'' : jsVal}, '', reviver);
+        }
+        return jsVal;
     };
 })();
+
