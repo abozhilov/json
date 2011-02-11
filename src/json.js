@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.2.1
+ * @version 0.2.3
  * @author Asen Bozhilov
  * @date 2011-02-09
  * 
@@ -40,6 +40,17 @@ var evalJSON = (function () {
         NUMBER     : 3,
         BOOLEAN    : 4,
         NULL       : 5
+    };
+    
+    var escChars = {
+        'b'  : '\b',
+        'f'  : '\f',
+        'n'  : '\n',
+        'r'  : '\r',
+        't'  : '\t',
+        '"'  : '"',
+        '\\' : '\\',
+        '/'  : '/'
     };
         
     function JSONLexer(JSONStr) {
@@ -202,8 +213,8 @@ var evalJSON = (function () {
         },
         
         getString : function (strVal) {
-            return strVal.slice(1, -1).replace(/\\u([0-9a-fA-F]{4})/g, function (match, hexVal) {
-                return String.fromCharCode(parseInt(hexVal, 16));
+            return strVal.slice(1, -1).replace(/\\u?([0-9A-F]{4}|["\\\/bfnrt])/g, function (match, escVal) {
+                return escChars[escVal] || String.fromCharCode(parseInt(escVal, 16));
             }); 
         },
         
