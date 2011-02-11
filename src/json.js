@@ -2,7 +2,7 @@
  * @name JSONParser 
  * @version 0.9.0
  * @author Asen Bozhilov
- * @date 2011-02-09
+ * @date 2011-02-11
  * 
  * @license MIT
  * 
@@ -13,7 +13,7 @@
  * Alexander a.k.a @bga_
  *
  * @usage
- * var jsValue = evalJSON(JSONStr);
+ * var jsValue = evalJSON(JSONStr, function reviver(name, value) {});
  */
 
 
@@ -288,4 +288,3 @@ var evalJSON = (function () {
         return jsVal;
     };
 })();
-
