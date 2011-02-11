@@ -1,6 +1,6 @@
 /**
  * @name JSONParser 
- * @version 0.9.0
+ * @version 0.9.1
  * @author Asen Bozhilov
  * @date 2011-02-11
  * 
@@ -13,7 +13,7 @@
  * Alexander a.k.a @bga_
  *
  * @usage
- * var jsValue = evalJSON(JSONStr, function reviver(name, value) {});
+ * var jsValue = evalJSON(JSONStr, function reviver(name, value) {return value;});
  */
 
 
