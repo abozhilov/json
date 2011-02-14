@@ -1,30 +1,30 @@
 /**
- * @name JSONParser 
- * @version 0.9.1
- * @author Asen Bozhilov
- * @date 2011-02-11
- * 
- * @license MIT
- * 
- * @description 
- * Javascript parser of JSON (JavaScript Object Notation) according ECMAScript 5 JSON grammar
- *
- * @contributors
- * Alexander a.k.a @bga_
- *
- * @usage
- * var jsValue = evalJSON(JSONStr, function reviver(name, value) {return value;});
- */
+* @name JSONParser
+* @version 0.9.3
+* @author Asen Bozhilov
+* @date 2011-02-14
+*
+* @license MIT
+*
+* @description
+* Javascript parser of JSON (JavaScript Object Notation) according ECMAScript 5 JSON grammar
+*
+* @contributors
+* Alexander a.k.a @bga_
+*
+* @usage
+* var jsValue = evalJSON(JSONStr, function reviver(name, value) {return value;});
+*/
 
 
 var evalJSON = (function () {
 
-    var LEFT_CURLY  = '{',
+    var LEFT_CURLY = '{',
         RIGHT_CURLY = '}',
-        COLON       = ':',
-        LEFT_BRACE  = '[',
+        COLON = ':',
+        LEFT_BRACE = '[',
         RIGHT_BRACE = ']',
-        COMMA       = ',';       
+        COMMA = ',';
 
     var punctuator = /^[{}:,\[\]]/,
         string = /^"(?:[^"\\\u0000-\u001F]|\\["\\\/bfnrt]|\\u[0-9A-F]{4})*"/,
@@ -36,28 +36,28 @@ var evalJSON = (function () {
         
     var tokenType = {
         PUNCTUATOR : 1,
-        STRING     : 2,
-        NUMBER     : 3,
-        BOOLEAN    : 4,
-        NULL       : 5
+        STRING : 2,
+        NUMBER : 3,
+        BOOLEAN : 4,
+        NULL : 5
     };
     
     var escChars = {
-        'b'  : '\b',
-        'f'  : '\f',
-        'n'  : '\n',
-        'r'  : '\r',
-        't'  : '\t',
-        '"'  : '"',
+        'b' : '\b',
+        'f' : '\f',
+        'n' : '\n',
+        'r' : '\r',
+        't' : '\t',
+        '"' : '"',
         '\\' : '\\',
-        '/'  : '/'
+        '/' : '/'
     };
         
     function JSONLexer(JSONStr) {
         this.line = 1;
         this.col = 1;
         this._tokLen = 0;
-        this._str = JSONStr; 
+        this._str = JSONStr;
     }
 
     JSONLexer.prototype = {
@@ -106,18 +106,18 @@ var evalJSON = (function () {
             this._str = str.slice(this._tokLen);
             
             return {
-                type : type, 
+                type : type,
                 value : token[0]
             };
         },
         
-        error : function (message) {
+        error : function (message, line, col) {
             var err = new SyntaxError(message);
-            err.line = this.line;
-            err.col  = this.col;
+            err.line = line || this.line;
+            err.col = col || this.col;
             
             throw err;
-        }   
+        }
     }
 
     function JSONParser(lexer) {
@@ -133,13 +133,14 @@ var evalJSON = (function () {
                 lex.error('Illegal token');
             }
             
-            return jsValue;       
+            return jsValue;
         },
         
         getObject : function () {
             var jsObj = {},
                 lex = this.lex,
-                token, tval, prop, 
+                token, tval, prop,
+                line, col,
                 pairs = false;
                 
             while (true) {
@@ -152,15 +153,17 @@ var evalJSON = (function () {
                 
                 if (pairs) {
                     if (tval == COMMA) {
+                        line = lex.line;
+                        col = lex.col - 1;                    
                         token = lex.getNextToken();
                         tval = token.value;
                         if (tval == RIGHT_CURLY) {
-                            lex.error('Invalid trailing comma');
-                        }           
+                            lex.error('Invalid trailing comma', line, col);
+                        }
                     }
                     else {
-                        lex.error('Illegal token where expect comma');
-                    } 
+                        lex.error('Illegal token where expect comma or right curly bracket');
+                    }
                 }
                 
                 if (token.type != tokenType.STRING) {
@@ -177,14 +180,15 @@ var evalJSON = (function () {
                 }
                 
                 jsObj[prop] = this.getValue();
-                pairs = true;           
+                pairs = true;
             }
         },
         
         getArray : function () {
             var jsArr = [],
                 lex = this.lex,
-                token, tval, prop, 
+                token, tval, prop,
+                line, col,                
                 values = false;
             while (true) {
                 token = lex.getNextToken();
@@ -196,26 +200,28 @@ var evalJSON = (function () {
                 
                 if (values) {
                     if (tval == COMMA) {
+                        line = lex.line;
+                        col = lex.col - 1;
                         token = lex.getNextToken();
-                        tval = token.value;  
+                        tval = token.value;
                         if (tval == RIGHT_BRACE) {
-                            lex.error('Invalid trailing comma');
-                        }           
+                            lex.error('Invalid trailing comma', line, col);
+                        }
                     }
                     else {
-                        lex.error('Illegal token where expect comma');
-                    } 
+                        lex.error('Illegal token where expect comma or right square bracket');
+                    }
                 }
                 
                 jsArr.push(this.getValue(token));
                 values = true;
-            }        
+            }
         },
         
         getString : function (strVal) {
             return strVal.slice(1, -1).replace(/\\u?([0-9A-F]{4}|["\\\/bfnrt])/g, function (match, escVal) {
                 return escChars[escVal] || String.fromCharCode(parseInt(escVal, 16));
-            }); 
+            });
         },
         
         getValue : function(fromToken) {
@@ -229,12 +235,12 @@ var evalJSON = (function () {
                     }
                     else if (tval == LEFT_BRACE) {
                         return this.getArray();
-                    }    
+                    }
                     else {
                         lex.error('Illegal punctoator');
                     }
                 case tokenType.STRING:
-                    return this.getString(tval);               
+                    return this.getString(tval);
                 case tokenType.NUMBER:
                     return Number(tval);
                 case tokenType.BOOLEAN:
@@ -243,9 +249,9 @@ var evalJSON = (function () {
                     return null;
                 default:
                     lex.error('Invalid value');
-           }       
+           }
         }
-    };   
+    };
     
     var getClass = Object.prototype.toString,
         hasOwnProp = Object.prototype.hasOwnProperty;
@@ -259,7 +265,7 @@ var evalJSON = (function () {
     }
     
     function walk(holder, name, rev) {
-        var val = holder[name], 
+        var val = holder[name],
             i, len;
         
         if (typeof val == 'object' && val) {
@@ -277,7 +283,7 @@ var evalJSON = (function () {
             }
         }
         
-        return rev.call(holder, name, val); 
+        return rev.call(holder, name, val);
     }
         
     return function (JSONStr, reviver) {
@@ -288,3 +294,5 @@ var evalJSON = (function () {
         return jsVal;
     };
 })();
+
+
