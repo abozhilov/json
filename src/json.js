@@ -1,6 +1,6 @@
 /**
 * @name JSONParser
-* @version 0.9.3
+* @version 0.9.4
 * @author Asen Bozhilov
 * @date 2011-02-14
 *
@@ -165,6 +165,9 @@ var evalJSON = (function () {
                         lex.error('Illegal token where expect comma or right curly bracket');
                     }
                 }
+                else if (tval == COMMA) {
+                    lex.error('Invalid leading comma');
+                }
                 
                 if (token.type != tokenType.STRING) {
                     lex.error('Invalid property name');
@@ -211,6 +214,9 @@ var evalJSON = (function () {
                     else {
                         lex.error('Illegal token where expect comma or right square bracket');
                     }
+                }
+                else if (tval == COMMA) {
+                    lex.error('Invalid leading comma');
                 }
                 
                 jsArr.push(this.getValue(token));
@@ -294,5 +300,4 @@ var evalJSON = (function () {
         return jsVal;
     };
 })();
-
 
