@@ -2,7 +2,7 @@
 * @name JSONParser
 * @version 0.9.4
 * @author Asen Bozhilov
-* @date 2011-02-14
+* @date 2011-02-15
 *
 * @license MIT
 *
@@ -170,7 +170,7 @@ var evalJSON = (function () {
                 }
                 
                 if (token.type != tokenType.STRING) {
-                    lex.error('Invalid token where expect string property name');
+                    lex.error('Illegal token where expect string property name');
                 }
                 
                 prop = this.getString(tval);
@@ -179,7 +179,7 @@ var evalJSON = (function () {
                 tval = token.value;
                 
                 if (tval != COLON) {
-                    lex.error('Invalid token where expect colon');
+                    lex.error('Illegal token where expect colon');
                 }
                 
                 jsObj[prop] = this.getValue();
