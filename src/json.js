@@ -1,6 +1,6 @@
 /**
 * @name JSONParser
-* @version 0.9.4
+* @version 1.0.0
 * @author Asen Bozhilov
 * @date 2011-02-15
 *
@@ -26,32 +26,35 @@ var evalJSON = (function () {
         RIGHT_BRACE = ']',
         COMMA = ',';
 
-    var punctuator = /^[{}:,\[\]]/,
-        string = /^"(?:[^"\\\u0000-\u001F]|\\["\\\/bfnrt]|\\u[0-9A-F]{4})*"/,
-        number = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/,
-        bool = /^(?:true|false)/,
-        nullLiteral = /^null/,
+    var tokenizer = /^(?:[{}:,\[\]]|true|false|null|"(?:[^"\\\u0000-\u001F]|\\["\\\/bfnrt]|\\u[0-9A-F]{4})*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)/,
         whiteSpace = /^[\t ]+/,
-        lineTerminator = /^\r?\n/;
+        lineTerminator = /^\r?\n/,
         
-    var tokenType = {
-        PUNCTUATOR : 1,
-        STRING : 2,
-        NUMBER : 3,
-        BOOLEAN : 4,
-        NULL : 5
-    };
+        tokenType = {
+            PUNCTUATOR : 1,
+            STRING : 2,
+            NUMBER : 3,
+            BOOLEAN : 4,
+            NULL : 5
+        },
     
-    var escChars = {
-        'b' : '\b',
-        'f' : '\f',
-        'n' : '\n',
-        'r' : '\r',
-        't' : '\t',
-        '"' : '"',
-        '\\' : '\\',
-        '/' : '/'
-    };
+        tokenMap = {
+            '{' : 1, '}' : 1, '[' : 1, ']' : 1, ',' : 1, ':' : 1,
+            '"' : 2,
+            't' : 4, 'f' : 4,
+            'n' : 5
+        },
+    
+        escChars = {
+            'b' : '\b',
+            'f' : '\f',
+            'n' : '\n',
+            'r' : '\r',
+            't' : '\t',
+            '"' : '"',
+            '\\' : '\\',
+            '/' : '/'
+        };
         
     function JSONLexer(JSONStr) {
         this.line = 1;
@@ -71,7 +74,12 @@ var evalJSON = (function () {
                 return 'END';
             }
             
-            if ((token = whiteSpace.exec(str))) {
+            token = tokenizer.exec(str);
+            
+            if (token) {
+                type = tokenMap[token[0].charAt(0)] || tokenType.NUMBER;
+            }
+            else if ((token = whiteSpace.exec(str))) {
                 this._tokLen = token[0].length;
                 this._str = str.slice(this._tokLen);
                 return this.getNextToken();
@@ -82,21 +90,6 @@ var evalJSON = (function () {
                 this.line++;
                 this.col = 1;
                 return this.getNextToken();
-            }
-            else if ((token = punctuator.exec(str))) {
-                type = tokenType.PUNCTUATOR;
-            }
-            else if ((token = string.exec(str))) {
-                type = tokenType.STRING;
-            }
-            else if ((token = number.exec(str))) {
-                type = tokenType.NUMBER;
-            }
-            else if ((token = bool.exec(str))) {
-                type = tokenType.BOOLEAN;
-            }
-            else if ((token = nullLiteral.exec(str))) {
-                type = tokenType.NULL;
             }
             else {
                 this.error('Invalid token');
@@ -300,4 +293,5 @@ var evalJSON = (function () {
         return jsVal;
     };
 })();
+
 
